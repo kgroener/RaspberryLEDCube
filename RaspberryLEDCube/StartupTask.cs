@@ -1,12 +1,6 @@
-﻿using RaspberryLEDCube.CanonicalSchema.Enums;
-using RaspberryLEDCube.CanonicalSchema.Protocol;
-using RaspberryLEDCube.CubeControl.Controllers;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using RaspberryLEDCube.CubeControl.Controllers;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
-using Windows.Devices.Gpio;
 
 // The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
 
@@ -25,13 +19,21 @@ namespace RaspberryLEDCube
             await controller.InitializeAsync();
 
             controller.StartLEDCube();
+            controller.Clear();
 
             while (true)
             {
-                controller.Clear();
+                controller.Fill(new CanonicalSchema.Schema.Color3(124, 0, 0));
                 controller.Draw();
-                
-                await Task.Delay(1000);
+                await Task.Delay(5000);
+
+                controller.Fill(new CanonicalSchema.Schema.Color3(0, 124, 0));
+                controller.Draw();
+                await Task.Delay(5000);
+
+                controller.Fill(new CanonicalSchema.Schema.Color3(0, 0, 124));
+                controller.Draw();
+                await Task.Delay(5000);
             }
 
             //_deferral.Complete();

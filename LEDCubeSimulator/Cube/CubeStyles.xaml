@@ -1,0 +1,11 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:LEDCube.Simulator.WPF.Cube"
+                    xmlns:sphere3D="clr-namespace:LEDCube.Simulator.WPF.Cube.Sphere3D">
+    <local:LEDGeometry x:Key="LEDGeometrySource" />
+
+    <MeshGeometry3D x:Key="LEDGeometry"
+                    Positions="{Binding Source={StaticResource LEDGeometrySource}, Path=Points}"
+                    TriangleIndices="{Binding Source={StaticResource LEDGeometrySource}, Path=TriangleIndices}"
+                    />
+</ResourceDictionary>

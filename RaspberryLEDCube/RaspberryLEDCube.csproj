@@ -11,8 +11,8 @@
     <AssemblyName>RaspberryLEDCube</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <EnableDotNetNativeCompatibleProfile>true</EnableDotNetNativeCompatibleProfile>
     <FileAlignment>512</FileAlignment>
@@ -21,6 +21,10 @@
     <PackageCertificateKeyFile>RaspberryLEDCube_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxPackage>true</AppxPackage>
     <ContainsStartupTask>true</ContainsStartupTask>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>arm</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>FFE8297B9AB12867F52AECA42D68F69C34D56BBB</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -130,18 +134,13 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <SDKReference Include="WindowsIoT, Version=10.0.10586.0">
-      <Name>Windows IoT Extensions for the UWP</Name>
-    </SDKReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CanonicalSchema\CanonicalSchema.csproj">
+    <ProjectReference Include="..\CanonicalSchema\RaspberryLEDCube.CanonicalSchema.csproj">
       <Project>{4a39d66a-6d65-405d-882d-d7b39e75e02e}</Project>
-      <Name>CanonicalSchema</Name>
+      <Name>RaspberryLEDCube.CanonicalSchema</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CubeControl\CubeControl.csproj">
+    <ProjectReference Include="..\CubeControl\RaspberryLEDCube.CubeControl.csproj">
       <Project>{8684b7c8-ef33-4f8e-b483-816c3eae3ddd}</Project>
-      <Name>CubeControl</Name>
+      <Name>RaspberryLEDCube.CubeControl</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

@@ -1,0 +1,8 @@
+﻿<Window x:Class="LEDCube.Simulator.WPF.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:LEDCube.Simulator.WPF.Views"
+    Title="Cube" Height="300" Width="330"
+    x:Name="rootItem">
+    <local:LEDCubeView />
+</Window>
