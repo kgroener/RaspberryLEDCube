@@ -73,15 +73,15 @@ namespace LEDCube.Simulator.WPF.Cube
             {
                 try
                 {
-                    UIHelper.UISafeInvoke(() =>
+                    for (int x = 0; x < ResolutionX; x++)
                     {
-                        for (int x = 0; x < ResolutionX; x++)
+                        for (int y = 0; y < ResolutionY; y++)
                         {
-                            for (int y = 0; y < ResolutionY; y++)
+                            for (int z = 0; z < ResolutionZ; z++)
                             {
-                                for (int z = 0; z < ResolutionZ; z++)
+                                var color = GetColor(_virtualCube[x][y][z]);
+                                UIHelper.UISafeInvoke(() =>
                                 {
-                                    var color = GetColor(_virtualCube[x][y][z]);
                                     _cube.GetLEDAt(x, y, z).LEDColor = new SolidColorBrush(new System.Windows.Media.Color()
                                     {
                                         A = color.A,
@@ -89,10 +89,10 @@ namespace LEDCube.Simulator.WPF.Cube
                                         G = color.G,
                                         B = color.B
                                     });
-                                }
+                                });
                             }
                         }
-                    });
+                    }
                 }
                 finally
                 {

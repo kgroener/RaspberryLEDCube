@@ -17,6 +17,7 @@
     <Grid>
          <Grid Background="DarkGray"
               x:Name="CubeViewPort3D"
+               MouseUp="HandleCubeMouseUp"
               MouseMove="HandleCubeMouseMove"
               MouseWheel="HandleCubeMouseWheel"
               MouseLeave="HandleCubeMouseLeave"

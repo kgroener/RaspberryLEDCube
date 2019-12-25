@@ -38,5 +38,7 @@ namespace LEDCube.Simulator.WPF.Views
 
         private void HandleCubeMouseLeave(object sender, MouseEventArgs e) => _cubeGestureEvents.StopDrag(e.GetPosition(CubeViewPort3D));
         private void HandleCubeStylusLeave(object sender, StylusEventArgs e) => _cubeGestureEvents.StopDrag(e.GetPosition(CubeViewPort3D));
+
+        private void HandleCubeMouseUp(object sender, MouseButtonEventArgs e) => _cubeGestureEvents.StopDrag(e.GetPosition(CubeViewPort3D));
     }
 }

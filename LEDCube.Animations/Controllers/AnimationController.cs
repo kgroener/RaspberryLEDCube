@@ -74,16 +74,16 @@ namespace LEDCube.Animations.Controllers
                 try
                 {
                     var stopwatch = new Stopwatch();
-                    DateTime animationStartTime = DateTime.Now;
-                    DateTime animationStopTime = DateTime.MaxValue;
                     stopwatch.Start();
+
+                    TimeSpan animationDuration = TimeSpan.Zero;
+                    TimeSpan prefferedDuration = TimeSpan.Zero;
 
                     while (_animationThreadCompletionSource == null)
                     {
                         lock (_animationQueueLock)
                         {
-                            DateTime currentTime = DateTime.Now;
-                            if (CurrentAnimation == null || CurrentAnimation.IsFinished || currentTime >= animationStopTime)
+                            if (CurrentAnimation == null || CurrentAnimation.IsFinished || animationDuration >= prefferedDuration)
                             {
                                 CurrentAnimation?.Cleanup();
 
@@ -91,8 +91,8 @@ namespace LEDCube.Animations.Controllers
                                 Console.WriteLine($"Starting new animation of type {CurrentAnimation.GetType()}");
                                 CurrentAnimation.Prepare();
 
-                                animationStartTime = currentTime;
-                                animationStopTime = animationStartTime + CurrentAnimation.PrefferedDuration;
+                                animationDuration = TimeSpan.Zero;
+                                prefferedDuration = CurrentAnimation.PrefferedDuration;
                             }
 
 
@@ -103,11 +103,11 @@ namespace LEDCube.Animations.Controllers
 
                                 if (anyHighPriorityAnimationQueued)
                                 {
-                                    DateTime allowedEndTime = currentTime + allowedTimeToStop;
-                                    animationStopTime = (allowedEndTime < animationStopTime) ? allowedEndTime : animationStopTime;
+                                    var remainingDuration = prefferedDuration - animationDuration;
+                                    prefferedDuration = (allowedTimeToStop < remainingDuration) ? allowedTimeToStop : prefferedDuration;
                                 }
 
-                                if (currentTime + allowedTimeToStop >= animationStopTime)
+                                if (animationDuration + allowedTimeToStop >= prefferedDuration)
                                 {
                                     Console.WriteLine($"Requesting stop of current animation within {allowedTimeToStop.TotalSeconds} seconds");
                                     CurrentAnimation.RequestStop(allowedTimeToStop);
@@ -115,21 +115,16 @@ namespace LEDCube.Animations.Controllers
                             }
                         }
 
-                        await Task.Delay(5);
+                        await Task.Delay(100);
 
                         var elapsedTime = stopwatch.Elapsed;
-
-                        Debug.WriteLine($"FPS: {1 / stopwatch.Elapsed.TotalSeconds}");
+                        animationDuration = animationDuration.Add(elapsedTime);
 
                         stopwatch.Restart();
 
                         CurrentAnimation.Update(_cube, elapsedTime);
 
-                        //Debug.WriteLine($"Update took {stopwatch.Elapsed}");
-
                         await _cube.DrawAsync();
-
-                        //Debug.WriteLine($"Draw + Update took {stopwatch.Elapsed}");
 
                     }
 
@@ -148,7 +143,7 @@ namespace LEDCube.Animations.Controllers
 
         private ILEDCubeAnimation GetAutoScheduledAnimation()
         {
-            IEnumerable<ILEDCubeAnimation> autoSchedulableAnimations = Animations.Where(a => a.AutomaticSchedulingAllowed);
+            var autoSchedulableAnimations = Animations.Where(a => a.AutomaticSchedulingAllowed);
             return autoSchedulableAnimations.Skip(_random.Next(0, autoSchedulableAnimations.Count())).First();
         }
 

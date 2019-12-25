@@ -17,7 +17,7 @@ namespace LEDCube.Simulator.WPF.Events
         private Point _leftMouseButtonDragStartPosition;
         private Point _rightMouseButtonDragStartPosition;
 
-        private object _dragLock = new object();
+        private readonly object _dragLock = new object();
         private readonly FrameworkElement _element;
 
         public CubeGestureEventsOwner(FrameworkElement element)
