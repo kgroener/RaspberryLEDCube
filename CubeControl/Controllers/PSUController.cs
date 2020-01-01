@@ -5,7 +5,7 @@ using Windows.Devices.Gpio;
 
 namespace RaspberryLEDCube.CubeControl.Controllers
 {
-    internal class PSUController
+    public class PSUController
     {
         private GpioPin _powerOkPin;
         private readonly int _powerOkPinNumber;

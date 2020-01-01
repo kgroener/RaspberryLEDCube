@@ -8,9 +8,9 @@ using Windows.Devices.Spi;
 
 namespace RaspberryLEDCube.CubeControl.Controllers
 {
-    internal class LEDController
+    public class LEDController
     {
-        private const int SPI_FREQUENCY = 1000000;
+        private const int SPI_FREQUENCY = 10000000;
 
         private SpiDevice _ledDriver;
         private ChipSelectLines _csLine;
@@ -20,11 +20,26 @@ namespace RaspberryLEDCube.CubeControl.Controllers
             _csLine = csLine;
         }
 
-        public void WriteColorBuffer(ProtocolColorBuffer colorBuffer)
+        public async Task WriteColorBufferAsync(ProtocolColorBuffer colorBuffer)
         {
             var bytes = colorBuffer.GetBytes();
 
-            Debug.WriteLine(string.Join(", ", bytes));
+            //Debug.WriteLine(string.Join(", ", bytes));
+
+            await Task.Delay(2);
+
+            // SPI device requires the CS pin to be reset every 8 bytes, thus write the bytes in 8 byte chuncks
+            while (bytes.Length > 0)
+            {
+                var bytesToWrite = bytes.Take(8).ToArray();
+                bytes = bytes.Skip(8).ToArray();
+                _ledDriver.Write(bytesToWrite);
+            }
+        }
+
+        public async Task WriteBulkColorBufferAsync(ProtocolBulkColorBuffer buffer)
+        {
+            var bytes = buffer.GetBytes();
 
             // SPI device requires the CS pin to be reset every 8 bytes, thus write the bytes in 8 byte chuncks
             while (bytes.Length > 0)

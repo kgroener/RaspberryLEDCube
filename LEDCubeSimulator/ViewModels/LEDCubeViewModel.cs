@@ -4,6 +4,7 @@ using LEDCube.Animations.Enums;
 using LEDCube.Simulator.WPF.Cube;
 using LEDCube.Simulator.WPF.Events;
 using LEDCube.Simulator.WPF.MVVM;
+using System;
 using System.Diagnostics;
 
 namespace LEDCube.Simulator.WPF.ViewModels
@@ -25,7 +26,7 @@ namespace LEDCube.Simulator.WPF.ViewModels
         {
             _cube = new LEDCubeGeometryGroup(8, 8, 8);
             _cubeController = new LEDCubeController(_cube);
-            _animationController = new AnimationController(_cubeController);
+            _animationController = new AnimationController(_cubeController, TimeSpan.FromMilliseconds(100));
 
             ZoomScale = 1;
             cubeGestureEvents.Dragged += HandleCubeDraggedEvent;

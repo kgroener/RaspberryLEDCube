@@ -10,6 +10,7 @@ namespace RaspberryLEDCube.CanonicalSchema.Protocol
     public class ProtocolColorBuffer : IEnumerable<byte>
     {
         private const byte ESCAPE_BYTE = 16;
+        private const byte BULK_START_BYTE = 1;
         private const byte START_BYTE = 2;
         private const byte END_BYTE = 3;
         private const byte CLEAR_BYTE = 4;

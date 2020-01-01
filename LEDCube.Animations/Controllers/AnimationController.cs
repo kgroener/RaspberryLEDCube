@@ -17,6 +17,7 @@ namespace LEDCube.Animations.Controllers
         }
 
         private Task _animationThread;
+        private readonly TimeSpan _updateCooldown;
         private readonly ILEDCubeController _cube;
         private readonly object _animationThreadLock;
         private readonly object _animationQueueLock;
@@ -28,8 +29,15 @@ namespace LEDCube.Animations.Controllers
         private ILEDCubeAnimation CurrentAnimation { get; set; }
 
 
-        public AnimationController(ILEDCubeController cube)
+        public AnimationController(ILEDCubeController cube, TimeSpan updateCooldown = default(TimeSpan))
         {
+            if (updateCooldown == default(TimeSpan))
+            {
+                updateCooldown = TimeSpan.Zero;
+            }
+
+            _updateCooldown = updateCooldown;
+
             _cube = cube;
             _random = new Random();
             _animationThreadLock = new object();
@@ -115,7 +123,7 @@ namespace LEDCube.Animations.Controllers
                             }
                         }
 
-                        await Task.Delay(100);
+                        await Task.Delay(_updateCooldown);
 
                         var elapsedTime = stopwatch.Elapsed;
                         animationDuration = animationDuration.Add(elapsedTime);

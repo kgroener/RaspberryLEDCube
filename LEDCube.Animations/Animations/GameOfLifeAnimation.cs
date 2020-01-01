@@ -33,11 +33,11 @@ namespace LEDCube.Animations.Animations
 
         public void Prepare()
         {
-            _updateFrequency = TimeSpan.FromSeconds(0.2);
+            _updateFrequency = TimeSpan.FromSeconds(0.1);
             _timeSinceLastUpdate = TimeSpan.FromSeconds(0);
             _isRunning = true;
             _timeRemaining = null;
-            _fadeSpeed = TimeSpan.FromSeconds(1);
+            _fadeSpeed = TimeSpan.FromSeconds(0.5);
         }
 
         public void RequestStop(TimeSpan timeout)
@@ -141,7 +141,7 @@ namespace LEDCube.Animations.Animations
                                     r = byte.MaxValue;
                                 }
 
-                                cube.SetLEDColorAbsolute(x, y, z, Color.FromArgb(0, (byte)r, currentColor.G, currentColor.B));
+                                cube.SetLEDColorAbsolute(x, y, z, Color.FromArgb(0, (byte)r, (byte)r/2, currentColor.B));
                             }
                         }
                     }

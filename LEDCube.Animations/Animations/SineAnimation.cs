@@ -1,4 +1,5 @@
 ﻿using LEDCube.Animations.Animations.Abstracts;
+using LEDCube.Animations.Helpers;
 using System;
 using System.Drawing;
 
@@ -21,7 +22,8 @@ namespace LEDCube.Animations.Animations
 
         protected override Color GenerateColor(double x, double y, double z)
         {
-            return Color.Red;
+            var hue = (x + y + z) * 360;
+            return ColorHelper.HSVToColor(hue, 1, 0.2);
         }
 
         protected override double GetMissingAxisValue(double? x, double? y, double? z)

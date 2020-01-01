@@ -142,6 +142,14 @@
       <Project>{8684b7c8-ef33-4f8e-b483-816c3eae3ddd}</Project>
       <Name>RaspberryLEDCube.CubeControl</Name>
     </ProjectReference>
+    <ProjectReference Include="..\LEDCube.Animations\LEDCube.Animations.csproj">
+      <Project>{73f8576f-611d-4c08-9f6e-870435c562c6}</Project>
+      <Name>LEDCube.Animations</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LEDCube.CanonicalSchema\LEDCube.CanonicalSchema.csproj">
+      <Project>{ba6f9a90-0da5-4036-a547-ba88e0c38cc3}</Project>
+      <Name>LEDCube.CanonicalSchema</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

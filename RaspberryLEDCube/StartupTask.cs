@@ -1,4 +1,8 @@
-﻿using RaspberryLEDCube.CubeControl.Controllers;
+﻿using LEDCube.Animations.Controllers;
+using LEDCube.Animations.Helpers;
+using RaspberryLEDCube.CubeControl.Controllers;
+using System;
+using System.Drawing;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 
@@ -9,34 +13,64 @@ namespace RaspberryLEDCube
     public sealed class StartupTask : IBackgroundTask
     {
         private BackgroundTaskDeferral _deferral;
+        private PSUController _psuController;
+        private LEDCubeController _cubeController;
+        private AnimationController _animationController;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             _deferral = taskInstance.GetDeferral();
 
-            LEDCubeController controller = new LEDCubeController(8, 8, 8);
+            _psuController = new PSUController(24, 23);
+            await _psuController.InitializeAsync();
+            
+            var ledController = new LEDController(CanonicalSchema.Enums.ChipSelectLines.ChipSelectPin24);
+            await ledController.InitializeAsync();
 
-            await controller.InitializeAsync();
+            _cubeController = new LEDCubeController(ledController);
 
-            controller.StartLEDCube();
-            controller.Clear();
+            _animationController = new AnimationController(_cubeController);
 
-            while (true)
-            {
-                controller.Fill(new CanonicalSchema.Schema.Color3(124, 0, 0));
-                controller.Draw();
-                await Task.Delay(5000);
+            await StartLEDCubeAsync();
 
-                controller.Fill(new CanonicalSchema.Schema.Color3(0, 124, 0));
-                controller.Draw();
-                await Task.Delay(5000);
+            _animationController.Start();
 
-                controller.Fill(new CanonicalSchema.Schema.Color3(0, 0, 124));
-                controller.Draw();
-                await Task.Delay(5000);
-            }
+            //var hue = 0.0;
+
+            //while (true)
+            //{
+            //    var color = ColorHelper.HSVToColor(hue, 1, 0.1);
+
+            //    _cubeController.Fill(Color.FromArgb(color.R, color.G, color.B));
+            //    await _cubeController.DrawAsync();
+            //    await Task.Delay(50);
+
+            //    hue += 1;
+            //}
 
             //_deferral.Complete();
+        }
+
+        private Task StartLEDCubeAsync()
+        {
+            if (_psuController.IsPowerOn())
+            {
+                throw new InvalidOperationException("LED cube is already started.");
+            }
+
+            _cubeController.Clear();
+            _psuController.TurnPowerOn();
+            return _cubeController.DrawAsync();
+        }
+
+        private void ShutdownLEDCube()
+        {
+            if (!_psuController.IsPowerOn())
+            {
+                throw new InvalidOperationException("LED cube is already shutdown.");
+            }
+
+            _psuController.TurnPowerOff();
         }
     }
 }
