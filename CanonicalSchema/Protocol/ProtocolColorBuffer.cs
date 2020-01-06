@@ -14,8 +14,7 @@ namespace RaspberryLEDCube.CanonicalSchema.Protocol
         private const byte START_BYTE = 2;
         private const byte END_BYTE = 3;
         private const byte CLEAR_BYTE = 4;
-
-        List<Color3> _colors;
+        readonly List<Color3> _colors;
         private byte _channel;
         private readonly int _numberOfColors;
 

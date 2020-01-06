@@ -4,6 +4,7 @@ using RaspberryLEDCube.CanonicalSchema.Protocol;
 using RaspberryLEDCube.CanonicalSchema.Schema;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -54,35 +55,6 @@ namespace RaspberryLEDCube.CubeControl.Controllers
                 }
             }
         }
-
-        //public async Task InitializeAsync()
-        //{
-        //    await _psuController.InitializeAsync();
-        //    await _ledController.InitializeAsync();
-        //}
-
-        //public async Task StartLEDCubeAsync()
-        //{
-        //    if (_psuController.IsPowerOn())
-        //    {
-        //        throw new InvalidOperationException("LED cube is already started.");
-        //    }
-
-        //    Clear();
-        //    _psuController.TurnPowerOn();
-        //    await Task.Delay(5);
-        //    await DrawAsync();
-        //}
-
-        //public void ShutdownLEDCube()
-        //{
-        //    if (!_psuController.IsPowerOn())
-        //    {
-        //        throw new InvalidOperationException("LED cube is already shutdown.");
-        //    }
-
-        //    _psuController.TurnPowerOff();
-        //}
 
         public void Clear()
         {
