@@ -7,6 +7,15 @@ namespace LEDCube.Animations.Helpers
 {
     public static class ColorHelper
     {
+        public static Color DimColor(Color baseColor, Color actualColor, double factor)
+        {
+            return Color.FromArgb(
+                    (int)(actualColor.R - (baseColor.R * factor)).Clip(0, 255),
+                    (int)(actualColor.G - (baseColor.G * factor)).Clip(0, 255),
+                    (int)(actualColor.B - (baseColor.B * factor)).Clip(0, 255));
+        }
+
+
         public static Color HSVToColor(double h, double S, double V)
         {
             double H = h;
@@ -25,8 +34,8 @@ namespace LEDCube.Animations.Helpers
                 int i = (int)Math.Floor(hf);
                 double f = hf - i;
                 double pv = V * (1 - S);
-                double qv = V * (1 - S * f);
-                double tv = V * (1 - S * (1 - f));
+                double qv = V * (1 - (S * f));
+                double tv = V * (1 - (S * (1 - f)));
                 switch (i)
                 {
 
