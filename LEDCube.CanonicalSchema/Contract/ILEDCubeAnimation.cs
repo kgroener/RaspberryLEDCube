@@ -28,11 +28,10 @@ namespace LEDCube.CanonicalSchema.Contract
         /// <summary>
         /// Once the animation is started, will be called periodically.
         /// During this method the animation will be able to update the led cube colors.
-        /// The update method should call the Draw method on the cube controller.
         /// </summary>
         /// <param name="cube"></param>
         /// <param name="updateInterval"></param>
-        void Update(ILEDCubeController cube, TimeSpan updateInterval);
+        void Update(ILEDCube cube, TimeSpan updateInterval);
 
         /// <summary>
         /// True when the animation is finished/stopped
