@@ -11,7 +11,7 @@ namespace LEDCube.Simulator.WPF.Cube.Sphere3D
         {
             int e;
             double segmentRad = Math.PI / 2 / (n + 1);
-            int numberOfSeparators = 4 * n + 4;
+            int numberOfSeparators = (4 * n) + 4;
 
             points = new Point3DCollection();
             triangleIndices = new Int32Collection();
@@ -35,33 +35,33 @@ namespace LEDCube.Simulator.WPF.Cube.Sphere3D
             {
                 for (int i = 0; i < numberOfSeparators; i++)
                 {
-                    triangleIndices.Add(e * numberOfSeparators + i);
-                    triangleIndices.Add(e * numberOfSeparators + i +
+                    triangleIndices.Add((e * numberOfSeparators) + i);
+                    triangleIndices.Add((e * numberOfSeparators) + i +
                                         numberOfSeparators);
-                    triangleIndices.Add(e * numberOfSeparators + (i + 1) %
-                                        numberOfSeparators + numberOfSeparators);
+                    triangleIndices.Add((e * numberOfSeparators) + ((i + 1) %
+                                        numberOfSeparators) + numberOfSeparators);
 
-                    triangleIndices.Add(e * numberOfSeparators + (i + 1) %
-                                        numberOfSeparators + numberOfSeparators);
-                    triangleIndices.Add(e * numberOfSeparators +
-                                       (i + 1) % numberOfSeparators);
-                    triangleIndices.Add(e * numberOfSeparators + i);
+                    triangleIndices.Add((e * numberOfSeparators) + ((i + 1) %
+                                        numberOfSeparators) + numberOfSeparators);
+                    triangleIndices.Add((e * numberOfSeparators) +
+                                       ((i + 1) % numberOfSeparators));
+                    triangleIndices.Add((e * numberOfSeparators) + i);
                 }
             }
 
             for (int i = 0; i < numberOfSeparators; i++)
             {
-                triangleIndices.Add(e * numberOfSeparators + i);
-                triangleIndices.Add(e * numberOfSeparators + (i + 1) %
-                                    numberOfSeparators);
-                triangleIndices.Add(numberOfSeparators * (2 * n + 1));
+                triangleIndices.Add((e * numberOfSeparators) + i);
+                triangleIndices.Add((e * numberOfSeparators) + ((i + 1) %
+                                    numberOfSeparators));
+                triangleIndices.Add(numberOfSeparators * ((2 * n) + 1));
             }
 
             for (int i = 0; i < numberOfSeparators; i++)
             {
                 triangleIndices.Add(i);
                 triangleIndices.Add((i + 1) % numberOfSeparators);
-                triangleIndices.Add(numberOfSeparators * (2 * n + 1) + 1);
+                triangleIndices.Add((numberOfSeparators * ((2 * n) + 1)) + 1);
             }
         }
 

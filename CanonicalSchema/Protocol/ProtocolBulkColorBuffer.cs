@@ -40,7 +40,7 @@ namespace RaspberryLEDCube.CanonicalSchema.Protocol
             bytes.Add(b);
         }
 
-        public byte[] GetBytes()
+        public byte[] GetBytes(double dimFactor = 1)
         {
             List<byte> bytes = new List<byte>();
 
@@ -51,9 +51,9 @@ namespace RaspberryLEDCube.CanonicalSchema.Protocol
             {
                 foreach(var color in buffer.AsColorArray())
                 {
-                    AddDataByte(bytes, color.Red);
-                    AddDataByte(bytes, color.Green);
-                    AddDataByte(bytes, color.Blue);
+                    AddDataByte(bytes, (byte)(color.Red * dimFactor));
+                    AddDataByte(bytes, (byte)(color.Green * dimFactor));
+                    AddDataByte(bytes, (byte)(color.Blue * dimFactor));
                 }
             }
 

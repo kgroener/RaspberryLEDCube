@@ -1,4 +1,6 @@
-﻿using LEDCube.Animations.Controllers;
+﻿using LEDCube.Animations.Animations;
+using LEDCube.Animations.Animations.Trigonometry;
+using LEDCube.Animations.Controllers;
 using LEDCube.Animations.Helpers;
 using RaspberryLEDCube.CubeControl.Controllers;
 using System;
@@ -20,7 +22,7 @@ namespace RaspberryLEDCube
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             _deferral = taskInstance.GetDeferral();
-
+            
             _psuController = new PSUController(24, 23);
             await _psuController.InitializeAsync();
             
@@ -33,6 +35,9 @@ namespace RaspberryLEDCube
 
             await StartLEDCubeAsync();
 
+            _animationController.RequestAnimation<DropletWaveAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
+            _animationController.RequestAnimation<SineAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
+            _animationController.RequestAnimation<GameOfLifeAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
             _animationController.Start();
 
             //var hue = 0.0;

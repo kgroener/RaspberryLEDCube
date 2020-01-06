@@ -2,6 +2,7 @@
 using LEDCube.Simulator.WPF.MVVM;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -108,12 +109,12 @@ namespace LEDCube.Simulator.WPF.Cube
 
         public System.Drawing.Color GetLEDColor(double x, double y, double z)
         {
-            var minX = (int)Math.Floor(x * ResolutionX - 0.5);
-            var maxX = (int)Math.Ceiling(x * ResolutionX - 0.5);
-            var minY = (int)Math.Floor(y * ResolutionY - 0.5);
-            var maxY = (int)Math.Ceiling(y * ResolutionY - 0.5);
-            var minZ = (int)Math.Floor(z * ResolutionZ - 0.5);
-            var maxZ = (int)Math.Ceiling(z * ResolutionZ - 0.5);
+            var minX = (int)Math.Floor((x * ResolutionX) - 0.5);
+            var maxX = (int)Math.Ceiling((x * ResolutionX) - 0.5);
+            var minY = (int)Math.Floor((y * ResolutionY) - 0.5);
+            var maxY = (int)Math.Ceiling((y * ResolutionY) - 0.5);
+            var minZ = (int)Math.Floor((z * ResolutionZ) - 0.5);
+            var maxZ = (int)Math.Ceiling((z * ResolutionZ) - 0.5);
 
             var colors = new List<ColorPart>();
 
@@ -127,7 +128,7 @@ namespace LEDCube.Simulator.WPF.Cube
                         var dY = 1 - (ResolutionY * Math.Abs((iy / (double)ResolutionY) - y));
                         var dZ = 1 - (ResolutionZ * Math.Abs((iz / (double)ResolutionZ) - z));
 
-                        var d = (float)Math.Sqrt(dX * dX + dY * dY + dZ * dZ);
+                        var d = (float)Math.Sqrt((dX * dX) + (dY * dY) + (dZ * dZ));
 
                         var colorPart = _virtualCube[ix][iy][iz];
 
@@ -185,12 +186,12 @@ namespace LEDCube.Simulator.WPF.Cube
         {
             color = System.Drawing.Color.FromArgb((byte)(255 * LED_TRANSPARENCY), color);
 
-            var minX = (int)Math.Floor(x * ResolutionX - 0.5);
-            var maxX = (int)Math.Ceiling(x * ResolutionX - 0.5);
-            var minY = (int)Math.Floor(y * ResolutionY - 0.5);
-            var maxY = (int)Math.Ceiling(y * ResolutionY - 0.5);
-            var minZ = (int)Math.Floor(z * ResolutionZ - 0.5);
-            var maxZ = (int)Math.Ceiling(z * ResolutionZ - 0.5);
+            var minX = (int)Math.Floor((x * ResolutionX) - 0.5);
+            var maxX = (int)Math.Ceiling((x * ResolutionX) - 0.5);
+            var minY = (int)Math.Floor((y * ResolutionY) - 0.5);
+            var maxY = (int)Math.Ceiling((y * ResolutionY) - 0.5);
+            var minZ = (int)Math.Floor((z * ResolutionZ) - 0.5);
+            var maxZ = (int)Math.Ceiling((z * ResolutionZ) - 0.5);
 
             foreach (int ix in new[] { minX, maxX }.Distinct())
             {
@@ -229,7 +230,7 @@ namespace LEDCube.Simulator.WPF.Cube
                         {
                             dZ = 1 - dZ;
                         }
-                        var d = (float)Math.Sqrt(dX * dX + dY * dY + dZ * dZ);
+                        var d = (float)Math.Sqrt((dX * dX) + (dY * dY) + (dZ * dZ));
 
                         if (d > 1 || d < 0)
                         {
@@ -253,6 +254,11 @@ namespace LEDCube.Simulator.WPF.Cube
                     }
                 }
             }
+        }
+
+        public void Fill(System.Drawing.Color fillColor)
+        {
+            throw new NotImplementedException();
         }
     }
 }
