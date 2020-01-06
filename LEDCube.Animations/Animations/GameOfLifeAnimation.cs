@@ -1,4 +1,5 @@
-﻿using LEDCube.CanonicalSchema.Contract;
+﻿using LEDCube.Animations.Helpers;
+using LEDCube.CanonicalSchema.Contract;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,10 +12,13 @@ namespace LEDCube.Animations.Animations
         private const int OVERPOPULATION_THRESHOLD = 5;
         private const int REPRODUCTION_THRESHOLD = 4;
         private TimeSpan? _timeRemaining;
+        private bool _hasBeenCleared;
         private bool _isRunning;
         private TimeSpan _updateFrequency;
         private TimeSpan _timeSinceLastUpdate;
         private TimeSpan _fadeSpeed;
+        private Color _color;
+        private Color _deathColor;
 
         public bool IsFinished => !_isRunning;
 
@@ -29,15 +33,38 @@ namespace LEDCube.Animations.Animations
         public void Cleanup()
         {
             _isRunning = false;
+            IsStopping = false;
         }
 
         public void Prepare()
         {
-            _updateFrequency = TimeSpan.FromSeconds(0.1);
+            _updateFrequency = TimeSpan.FromSeconds(0.10);
             _timeSinceLastUpdate = TimeSpan.FromSeconds(0);
             _isRunning = true;
             _timeRemaining = null;
+            _hasBeenCleared = false;
             _fadeSpeed = TimeSpan.FromSeconds(0.5);
+            _color = RandomNumber.GetRandomItem(new[]
+            {
+                Color.FromArgb(255,0,0),
+                Color.FromArgb(0,255,0),
+                Color.FromArgb(0,0,255),
+                Color.FromArgb(127,127,0),
+                Color.FromArgb(0,127,127),
+                Color.FromArgb(127,0,127),
+            });
+
+            var deathColorDelta = RandomNumber.GetRandomItem(new[]
+            {
+                Color.FromArgb(80,80,0),
+                Color.FromArgb(0,80,80),
+                Color.FromArgb(80,0,80),
+            });
+            _deathColor = Color.FromArgb(
+                (_color.R + deathColorDelta.R).Clip(0, 255),
+                (_color.G + deathColorDelta.G).Clip(0, 255),
+                (_color.B + deathColorDelta.B).Clip(0, 255));
+
         }
 
         public void RequestStop(TimeSpan timeout)
@@ -46,19 +73,24 @@ namespace LEDCube.Animations.Animations
             IsStopping = true;
         }
 
-        public void Update(ILEDCubeController cube, TimeSpan updateInterval)
+        public void Update(ILEDCube cube, TimeSpan updateInterval)
         {
+            if (!_hasBeenCleared)
+            {
+                cube.Clear();
+                _hasBeenCleared = true;
+            }
+
             if (_timeRemaining.HasValue)
             {
-                _timeRemaining -= _timeSinceLastUpdate;
+                _timeRemaining -= updateInterval;
             }
 
             _timeSinceLastUpdate += updateInterval;
             bool shouldUpdate = _timeSinceLastUpdate > _updateFrequency;
-
-            if (!shouldUpdate)
+            if (shouldUpdate)
             {
-                return;
+                _timeSinceLastUpdate = TimeSpan.FromSeconds(0);
             }
 
             int numberOfLEDSAlive = 0;
@@ -76,29 +108,32 @@ namespace LEDCube.Animations.Animations
                         aliveLEDS[x, y, z] = IsLEDAlive(cube, x, y, z);
 
                         var neighbourCount = GetAliveNeighbourCount(cube, x, y, z);
-
-                        if (aliveLEDS[x, y, z])
+                        
+                        if (shouldUpdate)
                         {
-                            if (neighbourCount <= UNDERPOPULATION_THRESHOLD
-                                || neighbourCount >= OVERPOPULATION_THRESHOLD)
+                            if (aliveLEDS[x, y, z])
                             {
-                                aliveLEDS[x, y, z] = false;
+                                if (neighbourCount <= UNDERPOPULATION_THRESHOLD
+                                    || neighbourCount >= OVERPOPULATION_THRESHOLD)
+                                {
+                                    aliveLEDS[x, y, z] = false;
+                                }
                             }
-                        }
-                        else if (neighbourCount == REPRODUCTION_THRESHOLD)
-                        {
-                            if (_timeRemaining.HasValue && (reproductionsFailed < 3 || _timeRemaining <= _fadeSpeed))
+                            else if (neighbourCount == REPRODUCTION_THRESHOLD)
                             {
-                                var t = Math.Ceiling(_timeRemaining.Value.TotalMilliseconds / _fadeSpeed.TotalMilliseconds) - 1;
-                                var r = RandomNumber.GetRandomNumber((int)t);
-                                var canReproduce = r == 0;
+                                if (_timeRemaining.HasValue && (reproductionsFailed < 3 || _timeRemaining <= _fadeSpeed))
+                                {
+                                    var t = Math.Max(0, Math.Ceiling(_timeRemaining.Value.TotalMilliseconds / _fadeSpeed.TotalMilliseconds) - 1);
+                                    var r = RandomNumber.GetRandomNumber((int)t);
+                                    var canReproduce = r == 0;
 
-                                reproductionsFailed++;
-                                aliveLEDS[x, y, z] = canReproduce;
-                            }
-                            else
-                            {
-                                aliveLEDS[x, y, z] = true;
+                                    reproductionsFailed++;
+                                    aliveLEDS[x, y, z] = canReproduce;
+                                }
+                                else
+                                {
+                                    aliveLEDS[x, y, z] = true;
+                                }
                             }
                         }
 
@@ -121,27 +156,25 @@ namespace LEDCube.Animations.Animations
 
                         if (alive)
                         {
-                            cube.SetLEDColorAbsolute(x, y, z, Color.FromArgb(byte.MaxValue, 0, 0));
+                            cube.SetLEDColorAbsolute(x, y, z, _color);
                         }
                         else
                         {
                             //cube.SetLEDColorAbsolute(x, y, z, Color.FromArgb(0, 0, 0, 0));
                             var currentColor = cube.GetLEDColorAbsolute(x, y, z);
-                            if (currentColor.R > 0)
+                            if (currentColor == _color)
+                            {
+                                currentColor = _deathColor;
+                            }
+
+                            if (currentColor.R > 0 || currentColor.G > 0 || currentColor.B > 0)
                             {
                                 anyDying = true;
-                                var r = (currentColor.R - (byte.MaxValue * (_timeSinceLastUpdate.TotalSeconds / _fadeSpeed.TotalSeconds)));
-                                if (r < 0)
-                                {
-                                    r = 0;
-                                }
 
-                                if (r > byte.MaxValue)
-                                {
-                                    r = byte.MaxValue;
-                                }
+                                var delta = (updateInterval.TotalSeconds / _fadeSpeed.TotalSeconds);
 
-                                cube.SetLEDColorAbsolute(x, y, z, Color.FromArgb(0, (byte)r, (byte)r/2, currentColor.B));
+                                var dimColor = ColorHelper.DimColor(_deathColor, currentColor, delta);
+                                cube.SetLEDColorAbsolute(x, y, z, dimColor);
                             }
                         }
                     }
@@ -162,7 +195,7 @@ namespace LEDCube.Animations.Animations
                     var y = oy + RandomNumber.GetRandomNumber(-1, 1);
                     var z = oz + RandomNumber.GetRandomNumber(-1, 1);
 
-                    cube.SetLEDColorAbsolute(x, y, z, Color.FromArgb(byte.MaxValue, 0, 0));
+                    cube.SetLEDColorAbsolute(x, y, z, _color);
                 }
             }
             else
@@ -172,17 +205,15 @@ namespace LEDCube.Animations.Animations
                     _isRunning = false;
                 }
             }
-
-            _timeSinceLastUpdate = TimeSpan.FromSeconds(0);
         }
 
-        private bool IsLEDAlive(ILEDCubeController cube, int x, int y, int z)
+        private bool IsLEDAlive(ILEDCube cube, int x, int y, int z)
         {
             var color = cube.GetLEDColorAbsolute(x, y, z);
-            return (color.R == byte.MaxValue);
+            return (color == _color);
         }
 
-        private int GetAliveNeighbourCount(ILEDCubeController cube, int x, int y, int z)
+        private int GetAliveNeighbourCount(ILEDCube cube, int x, int y, int z)
         {
             int count = 0;
 

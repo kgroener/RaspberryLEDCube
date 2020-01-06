@@ -4,27 +4,21 @@ using System.Drawing;
 
 namespace LEDCube.Animations.Animations.Abstracts
 {
-    public abstract class GeomitryAnimation : ILEDCubeAnimation
+    public abstract class TrigonometryAnimation : ILEDCubeAnimation
     {
-        internal enum VariableAxis
+        public enum VariableAxis
         {
             XAxis,
             YAxis,
             ZAxis
         };
 
-        private readonly VariableAxis _axis;
-        private Random _random;
-        private bool _isStopping;
-
-        internal GeomitryAnimation(VariableAxis axis)
+        internal TrigonometryAnimation()
         {
-            _axis = axis;
-            _random = new Random();
         }
 
         public bool IsFinished { get; protected set; }
-        public bool IsStopping => _isStopping;
+        public bool IsStopping { get; private set; }
         public bool IsFinite => false;
         public abstract TimeSpan PrefferedDuration { get; }
         public abstract bool AutomaticSchedulingAllowed { get; }
@@ -32,21 +26,31 @@ namespace LEDCube.Animations.Animations.Abstracts
         public void RequestStop(TimeSpan timeout)
         {
             RequestStopInternal(timeout);
-            _isStopping = true;
+            IsStopping = true;
         }
 
-        internal abstract void RequestStopInternal(TimeSpan timeout);
+        protected abstract void RequestStopInternal(TimeSpan timeout);
+        protected abstract void UpdateInternal(TimeSpan updateInterval);
 
-        public void Update(ILEDCubeController cube, TimeSpan updateInterval)
+        protected abstract VariableAxis GetVariableAxis();
+
+        public void Update(ILEDCube cube, TimeSpan updateInterval)
         {
+            if (cube == null)
+            {
+                throw new ArgumentNullException(nameof(cube));
+            }
+
             cube.Clear();
+
+            UpdateInternal(updateInterval);
 
             //Double samples for antialising
             double dX = 1.0 / (2 * cube.ResolutionX);
             double dY = 1.0 / (2 * cube.ResolutionY);
             double dZ = 1.0 / (2 * cube.ResolutionZ);
 
-            switch (_axis)
+            switch (GetVariableAxis())
             {
                 case VariableAxis.XAxis:
                     for (double y = -dY; y <= 1 + dY; y += dY)
@@ -90,7 +94,7 @@ namespace LEDCube.Animations.Animations.Abstracts
 
         public virtual void Prepare()
         {
-            _isStopping = false;
+            IsStopping = false;
             IsFinished = false;
             Speed = 1;
             IterationValueX = 0;
