@@ -14,29 +14,21 @@ namespace RaspberryLEDCube.CubeControl.Controllers
 {
     public class LEDCubeController : ILEDCubeController
     {
-        struct ColorPart
-        {
-            public System.Drawing.Color Color { get; set; }
-            public double Part { get; set; }
-        }
+        private readonly ProtocolBulkColorBuffer _cubeColorBuffer;
+
+        private readonly ProtocolColorBuffer[] _cubeColorBuffers;
 
         private readonly LEDController _ledController;
-        private readonly ProtocolColorBuffer[] _cubeColorBuffers;
-        private readonly ProtocolBulkColorBuffer _cubeColorBuffer;
+
         private readonly Dictionary<int, Dictionary<int, Dictionary<int, List<ColorPart>>>> _virtualCube;
-
-        public int ResolutionX => 8;
-
-        public int ResolutionY => 8;
-
-        public int ResolutionZ => 8;
+        private bool _hasBeenUpdated;
 
         public LEDCubeController(LEDController ledController)
         {
             _ledController = ledController;
 
             var layers = ResolutionZ;
-            var ledsPerLayer = ResolutionX*ResolutionY;
+            var ledsPerLayer = ResolutionX * ResolutionY;
 
             _cubeColorBuffers = Enumerable.Range(0, layers).Select(l => new ProtocolColorBuffer(ledsPerLayer, (byte)l)).ToArray();
             _cubeColorBuffer = new ProtocolBulkColorBuffer(_cubeColorBuffers);
@@ -56,18 +48,46 @@ namespace RaspberryLEDCube.CubeControl.Controllers
             }
         }
 
+        public int ResolutionX => 8;
+
+        public int ResolutionY => 8;
+
+        public int ResolutionZ => 8;
+
         public void Clear()
         {
             Fill(Color.FromArgb(0, 0, 0));
         }
 
+        public async Task DrawAsync()
+        {
+            if (_hasBeenUpdated)
+            {
+                for (byte x = 0; x < ResolutionX; x++)
+                {
+                    for (byte y = 0; y < ResolutionY; y++)
+                    {
+                        for (byte z = 0; z < ResolutionZ; z++)
+                        {
+                            var color = GetLEDColorAbsolute(x, y, z);
+                            int index = GetLEDBufferIndex((byte)x, (byte)z);
+                            SetLEDColorInBuffer((byte)y, index, color);
+                        }
+                    }
+                }
+
+                await _ledController.WriteBulkColorBufferAsync(_cubeColorBuffer);
+                _hasBeenUpdated = false;
+            }
+        }
+
         public void Fill(Color fillColor)
         {
-            foreach(var x in _virtualCube.Keys)
+            foreach (var x in _virtualCube.Keys)
             {
-                foreach(var y in _virtualCube[x].Keys)
+                foreach (var y in _virtualCube[x].Keys)
                 {
-                    foreach(var z in _virtualCube[x][y].Keys)
+                    foreach (var z in _virtualCube[x][y].Keys)
                     {
                         SetLEDColorAbsolute(x, y, z, fillColor);
                     }
@@ -75,22 +95,46 @@ namespace RaspberryLEDCube.CubeControl.Controllers
             }
         }
 
-        public async Task DrawAsync()
+        public Color GetLEDColor(double x, double y, double z)
         {
-            for (byte x = 0; x < ResolutionX; x++)
+            var minX = (int)Math.Floor((x * ResolutionX) - 0.5);
+            var maxX = (int)Math.Ceiling((x * ResolutionX) - 0.5);
+            var minY = (int)Math.Floor((y * ResolutionY) - 0.5);
+            var maxY = (int)Math.Ceiling((y * ResolutionY) - 0.5);
+            var minZ = (int)Math.Floor((z * ResolutionZ) - 0.5);
+            var maxZ = (int)Math.Ceiling((z * ResolutionZ) - 0.5);
+
+            var colors = new List<ColorPart>();
+
+            foreach (int ix in new[] { minX, maxX }.Distinct())
             {
-                for (byte y = 0; y < ResolutionY; y++)
+                foreach (int iy in new[] { minY, maxY }.Distinct())
                 {
-                    for (byte z = 0; z < ResolutionZ; z++)
+                    foreach (int iz in new[] { minZ, maxZ }.Distinct())
                     {
-                        var color = GetLEDColorAbsolute(x, y, z);
-                        int index = GetLEDBufferIndex((byte)x, (byte)y);
-                        SetLEDColorInBuffer((byte)z, index, color);
+                        var dX = 1 - (ResolutionX * Math.Abs((ix / (double)ResolutionX) - x));
+                        var dY = 1 - (ResolutionY * Math.Abs((iy / (double)ResolutionY) - y));
+                        var dZ = 1 - (ResolutionZ * Math.Abs((iz / (double)ResolutionZ) - z));
+
+                        var d = (float)Math.Sqrt((dX * dX) + (dY * dY) + (dZ * dZ));
+
+                        var colorPart = _virtualCube[ix][iy][iz];
+
+                        colors.Add(new ColorPart()
+                        {
+                            Color = GetColor(_virtualCube[ix][iy][iz]),
+                            Part = d
+                        });
                     }
                 }
             }
 
-            await _ledController.WriteBulkColorBufferAsync(_cubeColorBuffer);
+            return GetColor(colors);
+        }
+
+        public Color GetLEDColorAbsolute(int x, int y, int z)
+        {
+            return GetColor(_virtualCube[x][y][z]);
         }
 
         public void SetLEDColor(double x, double y, double z, Color color)
@@ -159,6 +203,8 @@ namespace RaspberryLEDCube.CubeControl.Controllers
                                 Part = d,
                             });
                         }
+
+                        _hasBeenUpdated = true;
                     }
                 }
             }
@@ -166,84 +212,12 @@ namespace RaspberryLEDCube.CubeControl.Controllers
 
         public void SetLEDColorAbsolute(int x, int y, int z, Color color)
         {
-            _virtualCube[x][y][z].Clear();
-            _virtualCube[x][y][z].Add(new ColorPart() { Color = color, Part = 1 });
-        }
-
-
-
-        //public Color3 GetLEDColor(byte x, byte y, byte z)
-        //{
-        //    int index = GetLEDBufferIndex(x, y);
-        //    return GetLEDColorFromBuffer(z, index);
-        //}
-
-        private void SetLEDColorInBuffer(byte layer, int index, Color color)
-        {
-            _cubeColorBuffers[layer][index].Red = color.R;
-            _cubeColorBuffers[layer][index].Green = color.G;
-            _cubeColorBuffers[layer][index].Blue = color.B;
-        }
-
-        //private Color3 GetLEDColorFromBuffer(byte layer, int index)
-        //{
-        //    Color3 color = _cubeColorBuffers[layer][index];
-        //    return new Color3(color.Red, color.Green, color.Blue);
-        //}
-
-        private int GetLEDBufferIndex(byte x, byte y)
-        {
-            int index;
-
-            var isYEven = (y % 2) == 0;
-
-            if (isYEven)
+            lock (_virtualCube[x][y][z])
             {
-                index = x + (y * ResolutionX);
+                _virtualCube[x][y][z].Clear();
+                _virtualCube[x][y][z].Add(new ColorPart() { Color = color, Part = 1 });
             }
-            else
-            {
-                index = ResolutionX - x - 1 + (y * ResolutionX);
-            }
-
-            return index;
-        }
-
-        public Color GetLEDColor(double x, double y, double z)
-        {
-            var minX = (int)Math.Floor((x * ResolutionX) - 0.5);
-            var maxX = (int)Math.Ceiling((x * ResolutionX) - 0.5);
-            var minY = (int)Math.Floor((y * ResolutionY) - 0.5);
-            var maxY = (int)Math.Ceiling((y * ResolutionY) - 0.5);
-            var minZ = (int)Math.Floor((z * ResolutionZ) - 0.5);
-            var maxZ = (int)Math.Ceiling((z * ResolutionZ) - 0.5);
-
-            var colors = new List<ColorPart>();
-
-            foreach (int ix in new[] { minX, maxX }.Distinct())
-            {
-                foreach (int iy in new[] { minY, maxY }.Distinct())
-                {
-                    foreach (int iz in new[] { minZ, maxZ }.Distinct())
-                    {
-                        var dX = 1 - (ResolutionX * Math.Abs((ix / (double)ResolutionX) - x));
-                        var dY = 1 - (ResolutionY * Math.Abs((iy / (double)ResolutionY) - y));
-                        var dZ = 1 - (ResolutionZ * Math.Abs((iz / (double)ResolutionZ) - z));
-
-                        var d = (float)Math.Sqrt((dX * dX) + (dY * dY) + (dZ * dZ));
-
-                        var colorPart = _virtualCube[ix][iy][iz];
-
-                        colors.Add(new ColorPart()
-                        {
-                            Color = GetColor(_virtualCube[ix][iy][iz]),
-                            Part = d
-                        });
-                    }
-                }
-            }
-
-            return GetColor(colors);
+            _hasBeenUpdated = true;
         }
 
         private static System.Drawing.Color GetColor(IEnumerable<ColorPart> colors)
@@ -269,9 +243,35 @@ namespace RaspberryLEDCube.CubeControl.Controllers
             }
         }
 
-        public Color GetLEDColorAbsolute(int x, int y, int z)
+        private int GetLEDBufferIndex(byte x, byte z)
         {
-            return GetColor(_virtualCube[x][y][z]);
+            int index;
+
+            var isZEven = (z % 2) == 0;
+
+            if (isZEven)
+            {
+                index = x + (z * ResolutionX);
+            }
+            else
+            {
+                index = ResolutionX - x - 1 + (z * ResolutionX);
+            }
+
+            return index;
+        }
+
+        private void SetLEDColorInBuffer(byte layer, int index, Color color)
+        {
+            _cubeColorBuffers[layer][index].Red = color.R;
+            _cubeColorBuffers[layer][index].Green = color.G;
+            _cubeColorBuffers[layer][index].Blue = color.B;
+        }
+
+        private struct ColorPart
+        {
+            public System.Drawing.Color Color { get; set; }
+            public double Part { get; set; }
         }
     }
 }
