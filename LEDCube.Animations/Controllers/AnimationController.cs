@@ -11,25 +11,23 @@ namespace LEDCube.Animations.Controllers
 {
     public class AnimationController
     {
-        private struct AnimationQueueItem
-        {
-            public AnimationPriority Priority { get; set; }
-            public ILEDCubeAnimation Animation { get; set; }
-        }
-
-        private Task _animationThread;
-        private readonly TimeSpan _updateCooldown;
-        private readonly ILEDCubeController _cube;
-        private readonly object _animationThreadLock;
-        private TaskCompletionSource<bool> _animationThreadCompletionSource;
-        private readonly ConcurrentQueue<ILEDCubeAnimation> _animationLowPriorityQueue;
-        private readonly ConcurrentQueue<ILEDCubeAnimation> _animationNormalPriorityQueue;
         private readonly ConcurrentQueue<ILEDCubeAnimation> _animationHighPriorityQueue;
+
+        private readonly ConcurrentQueue<ILEDCubeAnimation> _animationLowPriorityQueue;
+
+        private readonly ConcurrentQueue<ILEDCubeAnimation> _animationNormalPriorityQueue;
+
+        private readonly object _animationThreadLock;
+
+        private readonly ILEDCubeController _cube;
+
         private readonly Random _random;
 
-        private IEnumerable<ILEDCubeAnimation> Animations { get; }
-        private ILEDCubeAnimation CurrentAnimation { get; set; }
+        private readonly TimeSpan _updateCooldown;
 
+        private Task _animationThread;
+
+        private TaskCompletionSource<bool> _animationThreadCompletionSource;
 
         public AnimationController(ILEDCubeController cube, TimeSpan updateCooldown = default(TimeSpan))
         {
@@ -49,6 +47,33 @@ namespace LEDCube.Animations.Controllers
             Animations = LoadAnimations();
         }
 
+        private IEnumerable<ILEDCubeAnimation> Animations { get; }
+
+        private ILEDCubeAnimation CurrentAnimation { get; set; }
+
+        public void RequestAnimation<T>(AnimationPriority priority) where T : ILEDCubeAnimation
+        {
+            var animation = RandomNumber.GetRandomItem(Animations.OfType<T>());
+
+            switch (priority)
+            {
+                case AnimationPriority.High:
+                    _animationHighPriorityQueue.Enqueue(animation);
+                    break;
+
+                case AnimationPriority.Normal:
+                    _animationNormalPriorityQueue.Enqueue(animation);
+                    break;
+
+                case AnimationPriority.Low:
+                    _animationLowPriorityQueue.Enqueue(animation);
+                    break;
+
+                default:
+                    throw new ArgumentException($"Unknown priority: {priority}");
+            }
+        }
+
         public void Start()
         {
             lock (_animationThreadLock)
@@ -62,8 +87,6 @@ namespace LEDCube.Animations.Controllers
             }
         }
 
-
-
         public Task StopAsync()
         {
             lock (_animationThreadLock)
@@ -76,6 +99,37 @@ namespace LEDCube.Animations.Controllers
                 _animationThreadCompletionSource = new TaskCompletionSource<bool>();
                 return _animationThreadCompletionSource.Task;
             }
+        }
+
+        private TimeSpan GetAllowedTimeToStop()
+        {
+            if (_animationHighPriorityQueue.Any())
+            {
+                return TimeSpan.FromSeconds(2);
+            }
+
+            if (_animationNormalPriorityQueue.Any())
+            {
+                return TimeSpan.FromSeconds(4);
+            }
+
+            return TimeSpan.FromSeconds(6);
+        }
+
+        private ILEDCubeAnimation GetAutoScheduledAnimation()
+        {
+            var autoSchedulableAnimations = Animations.Where(a => a.AutomaticSchedulingAllowed);
+            return autoSchedulableAnimations.Skip(_random.Next(0, autoSchedulableAnimations.Count())).First();
+        }
+
+        private IEnumerable<ILEDCubeAnimation> LoadAnimations()
+        {
+            var animationType = typeof(ILEDCubeAnimation);
+            return GetType().Assembly.ExportedTypes
+                .Where(t => !t.IsAbstract)
+                .Where(t => animationType.IsAssignableFrom(t))
+                .Select(t => Activator.CreateInstance(t) as ILEDCubeAnimation)
+                .ToArray();
         }
 
         private Task RunAnimationThread()
@@ -112,7 +166,6 @@ namespace LEDCube.Animations.Controllers
                             prefferedDuration = CurrentAnimation.PrefferedDuration;
                         }
 
-
                         if (!CurrentAnimation.IsStopping)
                         {
                             var anyHighPriorityAnimationQueued = _animationHighPriorityQueue.Any();
@@ -146,7 +199,6 @@ namespace LEDCube.Animations.Controllers
                         CurrentAnimation.Update(_cube, elapsedTime);
 
                         await _cube.DrawAsync().ConfigureAwait(true);
-
                     }
 
                     lock (_animationThreadLock)
@@ -162,53 +214,10 @@ namespace LEDCube.Animations.Controllers
             });
         }
 
-        private ILEDCubeAnimation GetAutoScheduledAnimation()
+        private struct AnimationQueueItem
         {
-            var autoSchedulableAnimations = Animations.Where(a => a.AutomaticSchedulingAllowed);
-            return autoSchedulableAnimations.Skip(_random.Next(0, autoSchedulableAnimations.Count())).First();
-        }
-
-        private TimeSpan GetAllowedTimeToStop()
-        {
-            if (_animationHighPriorityQueue.Any())
-            {
-                return TimeSpan.FromSeconds(2);
-            }
-
-            if (_animationNormalPriorityQueue.Any())
-            {
-                return TimeSpan.FromSeconds(4);
-            }
-
-            return TimeSpan.FromSeconds(6);
-        }
-
-        public void RequestAnimation<T>(AnimationPriority priority) where T : ILEDCubeAnimation
-        {
-            switch (priority)
-            {
-                case AnimationPriority.High:
-                    _animationHighPriorityQueue.Enqueue(Animations.OfType<T>().Single());
-                    break;
-                case AnimationPriority.Normal:
-                    _animationNormalPriorityQueue.Enqueue(Animations.OfType<T>().Single());
-                    break;
-                case AnimationPriority.Low:
-                    _animationLowPriorityQueue.Enqueue(Animations.OfType<T>().Single());
-                    break;
-                default:
-                    throw new ArgumentException($"Unknown priority: {priority}");
-            }
-        }
-
-        private IEnumerable<ILEDCubeAnimation> LoadAnimations()
-        {
-            var animationType = typeof(ILEDCubeAnimation);
-            return GetType().Assembly.ExportedTypes
-                .Where(t => !t.IsAbstract)
-                .Where(t => animationType.IsAssignableFrom(t))
-                .Select(t => Activator.CreateInstance(t) as ILEDCubeAnimation)
-                .ToArray();
+            public ILEDCubeAnimation Animation { get; set; }
+            public AnimationPriority Priority { get; set; }
         }
     }
 }

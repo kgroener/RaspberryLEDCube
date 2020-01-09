@@ -1,4 +1,5 @@
 ﻿using LEDCube.Animations.Animations;
+using LEDCube.Animations.Animations.Text;
 using LEDCube.Animations.Animations.Trigonometry;
 using LEDCube.Animations.Controllers;
 using LEDCube.Animations.Helpers;
@@ -14,30 +15,27 @@ namespace RaspberryLEDCube
 {
     public sealed class StartupTask : IBackgroundTask
     {
+        private AnimationController _animationController;
+        private LEDCubeController _cubeController;
         private BackgroundTaskDeferral _deferral;
         private PSUController _psuController;
-        private LEDCubeController _cubeController;
-        private AnimationController _animationController;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             _deferral = taskInstance.GetDeferral();
-            
+
             _psuController = new PSUController(24, 23);
             await _psuController.InitializeAsync();
-            
+
             var ledController = new LEDController(CanonicalSchema.Enums.ChipSelectLines.ChipSelectPin24);
             await ledController.InitializeAsync();
 
             _cubeController = new LEDCubeController(ledController);
 
-            _animationController = new AnimationController(_cubeController);
+            _animationController = new AnimationController(_cubeController, TimeSpan.FromMilliseconds(10));
 
             await StartLEDCubeAsync();
 
-            _animationController.RequestAnimation<DropletWaveAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
-            _animationController.RequestAnimation<SineAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
-            _animationController.RequestAnimation<GameOfLifeAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
             _animationController.Start();
 
             //var hue = 0.0;
@@ -56,6 +54,16 @@ namespace RaspberryLEDCube
             //_deferral.Complete();
         }
 
+        private void ShutdownLEDCube()
+        {
+            if (!_psuController.IsPowerOn())
+            {
+                throw new InvalidOperationException("LED cube is already shutdown.");
+            }
+
+            _psuController.TurnPowerOff();
+        }
+
         private Task StartLEDCubeAsync()
         {
             if (_psuController.IsPowerOn())
@@ -66,16 +74,6 @@ namespace RaspberryLEDCube
             _cubeController.Clear();
             _psuController.TurnPowerOn();
             return _cubeController.DrawAsync();
-        }
-
-        private void ShutdownLEDCube()
-        {
-            if (!_psuController.IsPowerOn())
-            {
-                throw new InvalidOperationException("LED cube is already shutdown.");
-            }
-
-            _psuController.TurnPowerOff();
         }
     }
 }
