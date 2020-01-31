@@ -198,7 +198,7 @@ namespace LEDCube.Animations.Controllers
 
                         CurrentAnimation.Update(_cube, elapsedTime);
 
-                        await _cube.DrawAsync().ConfigureAwait(true);
+                        await _cube.DrawAsync(0.4).ConfigureAwait(true);
                     }
 
                     lock (_animationThreadLock)

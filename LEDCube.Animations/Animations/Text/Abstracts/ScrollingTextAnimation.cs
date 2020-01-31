@@ -46,12 +46,14 @@ namespace LEDCube.Animations.Animations.Text.Abstracts
         private PixelizedString _text;
         private TimeSpan _timeSinceLastUpdate;
 
-        public bool AutomaticSchedulingAllowed => true;
+        public abstract bool AutomaticSchedulingAllowed { get; }
         public bool IsFinished { get; private set; }
 
-        public bool IsFinite => true;
+        public bool IsFinite => !Repeat;
         public bool IsStopping { get; private set; }
-        public TimeSpan PrefferedDuration => TimeSpan.FromHours(30);
+        public abstract TimeSpan PrefferedDuration { get; }
+
+        protected abstract bool Repeat { get; }
 
         public void Cleanup()
         {
@@ -60,11 +62,6 @@ namespace LEDCube.Animations.Animations.Text.Abstracts
 
         public void Prepare()
         {
-            //_text = new PixelizedString("Testing", Color.FromArgb(80, 80, 80))
-            //        .Concat(new PixelizedString(" 1..", Color.FromArgb(0, 255, 0)))
-            //        .Concat(new PixelizedString(" 2..", Color.FromArgb(0, 0, 255)))
-            //        .Concat(new PixelizedString(" 3..", Color.FromArgb(255, 0, 0)));
-
             _text = GetText();
 
             _index = 0;
@@ -95,7 +92,14 @@ namespace LEDCube.Animations.Animations.Text.Abstracts
 
                 if (!leds.Any())
                 {
-                    IsFinished = true;
+                    if (!Repeat)
+                    {
+                        IsFinished = true;
+                    }
+                    else
+                    {
+                        _index = 0;
+                    }
                 }
 
                 foreach (var led in leds)

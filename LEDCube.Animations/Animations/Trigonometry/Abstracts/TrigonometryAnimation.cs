@@ -58,10 +58,9 @@ namespace LEDCube.Animations.Animations.Trigonometry.Abstracts
 
             UpdateInternal(updateInterval);
 
-            //Double samples for antialising
-            double dX = 1.0 / (2 * cube.ResolutionX);
-            double dY = 1.0 / (2 * cube.ResolutionY);
-            double dZ = 1.0 / (2 * cube.ResolutionZ);
+            double dX = 1.0 / (cube.ResolutionX - 1);
+            double dY = 1.0 / (cube.ResolutionY - 1);
+            double dZ = 1.0 / (cube.ResolutionZ - 1);
 
             switch (GetVariableAxis())
             {

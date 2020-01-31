@@ -66,9 +66,9 @@ namespace LEDCube.Animations.Animations.Trigonometry
 
         protected override void PrepareInternal()
         {
-            Speed = RandomNumber.GetRandomNumber(2, 5);
+            Speed = RandomNumber.GetRandomInteger(2, 5);
             _slowDownSpeed = 0;
-            _factor = RandomNumber.GetRandomNumber(2, 4);
+            _factor = RandomNumber.GetRandomInteger(2, 4);
             _axis = RandomNumber.GetRandomEnumValue<VariableAxis>();
         }
 

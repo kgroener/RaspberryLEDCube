@@ -1,15 +1,17 @@
 ﻿using LEDCube.Animations.Animations;
+using LEDCube.Animations.Animations.Cubes;
 using LEDCube.Animations.Animations.Text;
 using LEDCube.Animations.Animations.Trigonometry;
+using LEDCube.Animations.Animations.Weather;
 using LEDCube.Animations.Controllers;
 using LEDCube.Animations.Helpers;
+using Microsoft.IoT.Lightning.Providers;
 using RaspberryLEDCube.CubeControl.Controllers;
 using System;
 using System.Drawing;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
-
-// The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
+using Windows.Devices;
 
 namespace RaspberryLEDCube
 {
@@ -24,6 +26,11 @@ namespace RaspberryLEDCube
         {
             _deferral = taskInstance.GetDeferral();
 
+            if (LightningProvider.IsLightningEnabled)
+            {
+                LowLevelDevicesController.DefaultProvider = LightningProvider.GetAggregateProvider();
+            }
+
             _psuController = new PSUController(24, 23);
             await _psuController.InitializeAsync();
 
@@ -31,27 +38,14 @@ namespace RaspberryLEDCube
             await ledController.InitializeAsync();
 
             _cubeController = new LEDCubeController(ledController);
+            _cubeController.Initialize();
 
-            _animationController = new AnimationController(_cubeController, TimeSpan.FromMilliseconds(10));
+            _animationController = new AnimationController(_cubeController, TimeSpan.FromMilliseconds(20));
 
             await StartLEDCubeAsync();
 
+            _animationController.RequestAnimation<DropletWaveAnimation>(LEDCube.Animations.Enums.AnimationPriority.Normal);
             _animationController.Start();
-
-            //var hue = 0.0;
-
-            //while (true)
-            //{
-            //    var color = ColorHelper.HSVToColor(hue, 1, 0.1);
-
-            //    _cubeController.Fill(Color.FromArgb(color.R, color.G, color.B));
-            //    await _cubeController.DrawAsync();
-            //    await Task.Delay(50);
-
-            //    hue += 1;
-            //}
-
-            //_deferral.Complete();
         }
 
         private void ShutdownLEDCube()

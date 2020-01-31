@@ -12,7 +12,7 @@
     Publisher="CN=koeng"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="18cab373-9e55-4d60-b9bb-d59593ec21ef" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="18cab373-9e55-4d60-b9bb-d59593ec21ef" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
 
   <Properties>
     <DisplayName>RaspberryLEDCube</DisplayName>
@@ -25,7 +25,7 @@
   </Dependencies>
 
   <Resources>
-    <Resource Language="x-generate"/>
+    <Resource Language="x-generate" />
   </Resources>
 
   <Applications>
@@ -37,7 +37,7 @@
         Description="RaspberryLEDCube"
         BackgroundColor="transparent"
         AppListEntry="none">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
@@ -53,5 +53,6 @@
   <Capabilities>
     <Capability Name="internetClient" />
     <iot:Capability Name="lowLevelDevices" />
+    <DeviceCapability Name="109b86ad-f53d-4b76-aa5f-821e2ddf2141" />
   </Capabilities>
 </Package>

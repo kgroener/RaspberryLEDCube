@@ -8,27 +8,23 @@ namespace LEDCube.Animations.Animations
 {
     public class GameOfLifeAnimation : ILEDCubeAnimation
     {
-        private const int UNDERPOPULATION_THRESHOLD = 3;
         private const int OVERPOPULATION_THRESHOLD = 5;
         private const int REPRODUCTION_THRESHOLD = 4;
-        private TimeSpan? _timeRemaining;
-        private bool _hasBeenCleared;
-        private bool _isRunning;
-        private TimeSpan _updateFrequency;
-        private TimeSpan _timeSinceLastUpdate;
-        private TimeSpan _fadeSpeed;
+        private const int UNDERPOPULATION_THRESHOLD = 3;
         private Color _color;
         private Color _deathColor;
-
+        private TimeSpan _fadeSpeed;
+        private bool _hasBeenCleared;
+        private bool _isRunning;
+        private TimeSpan? _timeRemaining;
+        private TimeSpan _timeSinceLastUpdate;
+        private TimeSpan _updateFrequency;
+        public bool AutomaticSchedulingAllowed => true;
         public bool IsFinished => !_isRunning;
 
-        public bool IsStopping { get; private set; }
-
         public bool IsFinite => false;
-
+        public bool IsStopping { get; private set; }
         public TimeSpan PrefferedDuration => TimeSpan.FromSeconds(30);
-
-        public bool AutomaticSchedulingAllowed => true;
 
         public void Cleanup()
         {
@@ -64,7 +60,6 @@ namespace LEDCube.Animations.Animations
                 (_color.R + deathColorDelta.R).Clip(0, 255),
                 (_color.G + deathColorDelta.G).Clip(0, 255),
                 (_color.B + deathColorDelta.B).Clip(0, 255));
-
         }
 
         public void RequestStop(TimeSpan timeout)
@@ -108,7 +103,7 @@ namespace LEDCube.Animations.Animations
                         aliveLEDS[x, y, z] = IsLEDAlive(cube, x, y, z);
 
                         var neighbourCount = GetAliveNeighbourCount(cube, x, y, z);
-                        
+
                         if (shouldUpdate)
                         {
                             if (aliveLEDS[x, y, z])
@@ -124,7 +119,7 @@ namespace LEDCube.Animations.Animations
                                 if (_timeRemaining.HasValue && (reproductionsFailed < 3 || _timeRemaining <= _fadeSpeed))
                                 {
                                     var t = Math.Max(0, Math.Ceiling(_timeRemaining.Value.TotalMilliseconds / _fadeSpeed.TotalMilliseconds) - 1);
-                                    var r = RandomNumber.GetRandomNumber((int)t);
+                                    var r = RandomNumber.GetRandomInteger((int)t);
                                     var canReproduce = r == 0;
 
                                     reproductionsFailed++;
@@ -185,15 +180,15 @@ namespace LEDCube.Animations.Animations
             {
                 var repopulationCount = numberOfLEDSAlive == 0 ? 20 : 2;
 
-                var ox = RandomNumber.GetRandomNumber(2, cube.ResolutionX - 3);
-                var oy = RandomNumber.GetRandomNumber(2, cube.ResolutionY - 3);
-                var oz = RandomNumber.GetRandomNumber(2, cube.ResolutionZ - 3);
+                var ox = RandomNumber.GetRandomInteger(2, cube.ResolutionX - 3);
+                var oy = RandomNumber.GetRandomInteger(2, cube.ResolutionY - 3);
+                var oz = RandomNumber.GetRandomInteger(2, cube.ResolutionZ - 3);
 
-                for (int i = 0; i < RandomNumber.GetRandomNumber(1, repopulationCount); i++)
+                for (int i = 0; i < RandomNumber.GetRandomInteger(1, repopulationCount); i++)
                 {
-                    var x = ox + RandomNumber.GetRandomNumber(-1, 1);
-                    var y = oy + RandomNumber.GetRandomNumber(-1, 1);
-                    var z = oz + RandomNumber.GetRandomNumber(-1, 1);
+                    var x = ox + RandomNumber.GetRandomInteger(-1, 1);
+                    var y = oy + RandomNumber.GetRandomInteger(-1, 1);
+                    var z = oz + RandomNumber.GetRandomInteger(-1, 1);
 
                     cube.SetLEDColorAbsolute(x, y, z, _color);
                 }
@@ -205,12 +200,6 @@ namespace LEDCube.Animations.Animations
                     _isRunning = false;
                 }
             }
-        }
-
-        private bool IsLEDAlive(ILEDCube cube, int x, int y, int z)
-        {
-            var color = cube.GetLEDColorAbsolute(x, y, z);
-            return (color == _color);
         }
 
         private int GetAliveNeighbourCount(ILEDCube cube, int x, int y, int z)
@@ -240,6 +229,12 @@ namespace LEDCube.Animations.Animations
             }
 
             return count;
+        }
+
+        private bool IsLEDAlive(ILEDCube cube, int x, int y, int z)
+        {
+            var color = cube.GetLEDColorAbsolute(x, y, z);
+            return (color == _color);
         }
     }
 }
